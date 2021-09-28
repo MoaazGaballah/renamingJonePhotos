@@ -18,6 +18,25 @@ public class Main {
             this.extension = extension;
             this.fileKey = fileKey;
         }
+
+        public String toString(){
+            return this.city + this.number + this.extension;
+        }
+
+        /*Comparator for sorting the list by roll no*/
+        public static Comparator<newPhoto> newPhotoFileKeySorting = new Comparator<newPhoto>() {
+
+            public int compare(newPhoto np1, newPhoto np2) {
+
+                int fileKey1 = np1.fileKey;
+                int fileKey2 = np2.fileKey;
+
+                /*For ascending order*/
+                return fileKey1 - fileKey2;
+
+                /*For descending order*/
+//                fileKey2 - fileKey1;
+            }};
     }
 
     public static class OldPhoto {
@@ -38,47 +57,40 @@ public class Main {
 
     static ArrayList<String> listOfLines = new ArrayList<>();
 
-    public static ArrayList<String> readingStringLineByLine(String s) throws IOException {
-
-        ArrayList<OldPhoto> oldPhotos = readFile(s);
-
-        // sort by city
-        sortByField(oldPhotos, " ");
-
-        // group cities together
-        ArrayList<ArrayList<OldPhoto>> oldPhotosSplittedByCities = splitByCities(oldPhotos);
-
-        // sort by date and time
-        ArrayList<ArrayList<ArrayList<OldPhoto>>> oldPhotosSplittedAndSortedByDateAndTime = splitByDateAndTime(oldPhotosSplittedByCities);
-
-        // get a list for new photos
-        getNewPhotos(oldPhotosSplittedAndSortedByDateAndTime);
-
-        // return the result
-        return listOfLines;
+    public static void writeNewPhotosToNewList(ArrayList<newPhoto> newPhotos){
+       sortNewPhotosByFileKey(newPhotos);
+        for (int i = 0; i < newPhotos.size(); i++) {
+            listOfLines.add(newPhotos.get(i).toString());
+        }
     }
 
-    public static ArrayList<ArrayList<ArrayList<newPhoto>>> getNewPhotos(ArrayList<ArrayList<ArrayList<OldPhoto>>> oldPhotos) {
-        ArrayList<ArrayList<ArrayList<newPhoto>>> newPhotos = new ArrayList<>();
+    public static ArrayList<newPhoto> sortNewPhotosByFileKey(ArrayList<newPhoto> newPhotos){
+        Collections.sort(newPhotos, newPhoto.newPhotoFileKeySorting);
+        return newPhotos;
+    }
+
+    public static ArrayList<newPhoto> getNewPhotos(ArrayList<ArrayList<ArrayList<OldPhoto>>> oldPhotos) {
+        ArrayList<newPhoto> newPhotos = new ArrayList<>();
         for (int i = 0; i < oldPhotos.size(); i++) {
-            ArrayList<ArrayList<newPhoto>> nestedPhotos = new ArrayList<>();
+
+            // in cities level we are going to specify a number according to city array length
+            int length = String.valueOf(oldPhotos.get(i).size()).length();
+            // this count will be return to one for each city arraylist
+            int count = 1;
+
             for (int j = 0; j < oldPhotos.get(i).size(); j++) {
-                ArrayList<newPhoto> photos = new ArrayList<>();
                 for (int k = 0; k < oldPhotos.get(i).get(j).size(); k++) {
-                    int length = String.valueOf(getMax(oldPhotos.get(i).get(j))).length();
-                    String number = getNumber(oldPhotos.get(i).get(j).get(k).fileKey, length);
+                    String number = getNumber(count, length);
                     String city = oldPhotos.get(i).get(j).get(k).city;
                     String extension = oldPhotos.get(i).get(j).get(k).extension;
                     int fileKey = oldPhotos.get(i).get(j).get(k).fileKey;
                     newPhoto np = new newPhoto(city, number, extension, fileKey);
 
-                    photos.add(np);
+                    newPhotos.add(np);
 
-//                    listOfLines.add(newPhotos.toString());
+                    count++;
                 }
-                nestedPhotos.add(photos);
             }
-            newPhotos.add(nestedPhotos);
         }
         return newPhotos;
     }
@@ -92,7 +104,7 @@ public class Main {
         return sb.toString();
     }
 
-    public static ArrayList<ArrayList<ArrayList<OldPhoto>>> splitByDateAndTime(ArrayList<ArrayList<OldPhoto>> oldPhotosNotSplittedBydate) {
+    public static ArrayList<ArrayList<ArrayList<OldPhoto>>> splitByDate(ArrayList<ArrayList<OldPhoto>> oldPhotosNotSplittedBydate) {
         ArrayList<ArrayList<ArrayList<OldPhoto>>> oldPhotosSplittdBydate = new ArrayList<>();
         for (int i = 0; i < oldPhotosNotSplittedBydate.size(); i++) {
             // sort by date
@@ -100,16 +112,16 @@ public class Main {
             ArrayList<ArrayList<OldPhoto>> oldPhotosSortedAndSplittdByDate = new ArrayList<>();
             int startIndex = 0;
             for (int j = 0; j < oldPhotosSortedByDate.size(); j++) {
-                String dateBefore = oldPhotosSortedByDate.get(j).date.substring(0, 4);
+                String dateBefore = oldPhotosSortedByDate.get(j).date;
                 if (j + 1 < oldPhotosSortedByDate.size()) {
-                    String dateAfter = oldPhotosSortedByDate.get(j + 1).date.substring(0, 4);
+                    String dateAfter = oldPhotosSortedByDate.get(j + 1).date;
                     if (!dateBefore.equals(dateAfter)) {
-                        oldPhotosSortedAndSplittdByDate.add(sortByField(new ArrayList<>(oldPhotosSortedByDate.subList(startIndex, j + 1)), "00:00:00"));
+                        oldPhotosSortedAndSplittdByDate.add(sortByField(new ArrayList<>(oldPhotosSortedByDate.subList(startIndex, j + 1)),"00:00:00"));
                         startIndex = j + 1;
                     }
                 }
             }
-            oldPhotosSortedAndSplittdByDate.add(sortByField(new ArrayList<>(oldPhotosSortedByDate.subList(startIndex, oldPhotosSortedByDate.size())), "00:00:00"));
+            oldPhotosSortedAndSplittdByDate.add(sortByField(new ArrayList<>(oldPhotosSortedByDate.subList(startIndex, oldPhotosSortedByDate.size())),"00:00:00"));
             oldPhotosSplittdBydate.add(new ArrayList<>(oldPhotosSortedAndSplittdByDate));
         }
         return oldPhotosSplittdBydate;
@@ -202,26 +214,41 @@ public class Main {
         return oldPhotos;
     }
 
-    public static int getMax(ArrayList<OldPhoto> listOfOldPhotos) {
-        int max = Integer.MIN_VALUE;
-        for (int i = 0; i < listOfOldPhotos.size(); i++) {
-            if (listOfOldPhotos.get(i).fileKey > max) {
-                max = listOfOldPhotos.get(i).fileKey;
-            }
-        }
-        return max;
-    }
 
-    public static void solution(String S) {
+    public static ArrayList<String> solution(String S) throws IOException{
         // write your code in Java SE 8
+
+        // 1 - read file
+        // 2 - create an old photos and get cities, date, time, and extension
+        // 3 - sort photos by city, split into nested arraylist (each city is in a list alone)
+        // 4 - sort photos by date, split into nested arraylist (each date is in a list alone)
+        // 5 - sort photos in the latest list by time
+        // 6 - create a new photo list with old properties and generating a new number
+        // 7 - sort the latest list with filekey and write them as string into a global string list
+
+        ArrayList<OldPhoto> oldPhotos = readFile(S);
+
+        // sort by city
+        sortByField(oldPhotos, " ");
+
+        // group cities together
+        ArrayList<ArrayList<OldPhoto>> oldPhotosSplittedByCities = splitByCities(oldPhotos);
+
+        // sort by date
+        ArrayList<ArrayList<ArrayList<OldPhoto>>> oldPhotosSplittedAndSortedByDateAndTime = splitByDate(oldPhotosSplittedByCities);
+
+        // get a list for new photos
+        ArrayList<newPhoto> newPhotos = getNewPhotos(oldPhotosSplittedAndSortedByDateAndTime);
+
+        // write to list of string
+        writeNewPhotosToNewList(newPhotos);
+
+        // return the result
+        return listOfLines;
 
     }
 
     public static void main(String[] args) throws IOException {
-
-//        int a [] = {1, 3, 6, 4, 1, 2};
-//
-//        System.out.println(solution(a));
 
         String s = "photo.jpg, Warsaw, 2013-10-23 14:08:15\n" +
                 "john.png, London, 2015-06-20 15:13:22\n" +
@@ -235,11 +262,10 @@ public class Main {
                 "e.png, Paris, 2018-09-05 14:07:14\n" +
                 "f.jpg, Warsaw, 2017-10-05 14:07:13\n" +
                 "j.png, Paris, 2011-11-05 14:07:13\n";
-        ArrayList lines = readingStringLineByLine(s);
+        ArrayList lines = solution(s);
 
-//        System.out.println(getNumber(2, 5));
-//        System.out.println(s);
+        for (int i = 0; i < lines.size(); i++) {
+            System.out.println(lines.get(i));
+        }
     }
 }
-
-
