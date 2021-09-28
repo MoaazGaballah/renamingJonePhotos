@@ -73,12 +73,14 @@ public class Main {
         ArrayList<newPhoto> newPhotos = new ArrayList<>();
         for (int i = 0; i < oldPhotos.size(); i++) {
 
-            // in cities level we are going to specify a number according to city array length
-            int length = String.valueOf(oldPhotos.get(i).size()).length();
             // this count will be return to one for each city arraylist
             int count = 1;
 
             for (int j = 0; j < oldPhotos.get(i).size(); j++) {
+
+                // in cities level we are going to specify a number according to city array length
+                int length = String.valueOf(oldPhotos.get(i).get(j).size()).length();
+
                 for (int k = 0; k < oldPhotos.get(i).get(j).size(); k++) {
                     String number = getNumber(count, length);
                     String city = oldPhotos.get(i).get(j).get(k).city;
@@ -262,10 +264,12 @@ public class Main {
                 "e.png, Paris, 2018-09-05 14:07:14\n" +
                 "f.jpg, Warsaw, 2017-10-05 14:07:13\n" +
                 "j.png, Paris, 2011-11-05 14:07:13\n";
-        ArrayList lines = solution(s);
+                ArrayList lines = solution(s);
 
         for (int i = 0; i < lines.size(); i++) {
             System.out.println(lines.get(i));
         }
     }
 }
+
+
